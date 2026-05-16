@@ -1,0 +1,21 @@
+[package]
+name = "goodwe-web"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = "0.7"
+axum-extra = { version = "0.9", features = ["cookie"] }
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+base64 = "0.22"
+md5 = "0.7"
+chrono = "0.4"
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+dotenvy = "0.15"
+open = "5"

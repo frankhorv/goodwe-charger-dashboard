@@ -1,0 +1,61 @@
+name: goodwe-web / build
+run-name: ${{ github.workflow }} @ ${{ github.ref_name }}
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+    paths:
+      - "src/**"
+      - "static/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/build.yaml"
+
+jobs:
+  build:
+    name: Windows x86_64
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build
+        run: cargo build --release
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: goodwe-web-windows-x86_64
+          path: target/release/goodwe-web.exe
+          if-no-files-found: error
+
+  # ── Create GitHub release when a version tag is pushed ─────────────────────
+  release:
+    name: Create release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: goodwe-web-windows-x86_64
+          path: dist/
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: dist/goodwe-web.exe

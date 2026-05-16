@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GoodWe EV Dashboard</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #f0f4f0;
+  color: #1a1a1a;
+  padding: 24px 16px;
+  min-height: 100vh;
+}
+
+.container { max-width: 900px; margin: 0 auto; }
+
+h1 { font-size: 1.7rem; color: #1a4d1a; margin-bottom: 20px; }
+
+.card {
+  background: white;
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.card-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #888;
+  margin-bottom: 14px;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.field-row:last-child { margin-bottom: 0; }
+
+label { font-size: 0.9rem; color: #444; font-weight: 500; }
+
+input, select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #d0d8d0;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: white;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+input:focus, select:focus {
+  outline: none;
+  border-color: #2d7a2d;
+  box-shadow: 0 0 0 3px rgba(45,122,45,0.12);
+}
+
+.period-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.period-nav select { flex: 1; }
+.period-nav input  { width: 88px; flex-shrink: 0; }
+
+/* ── Session banner ─────────────────────────────────────────────────────── */
+.session-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.session-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+}
+
+.session-dot {
+  width: 10px; height: 10px;
+  background: #2d7a2d;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.session-info strong { color: #1a4d1a; }
+
+/* ── Buttons ────────────────────────────────────────────────────────────── */
+.actions { display: flex; align-items: center; gap: 14px; margin-top: 4px; }
+
+.btn-primary {
+  background: #2d7a2d;
+  color: white;
+  border: none;
+  padding: 11px 26px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+.btn-primary:hover:not(:disabled) { background: #246424; }
+.btn-primary:active:not(:disabled) { transform: scale(0.98); }
+.btn-primary:disabled { background: #9ab09a; cursor: not-allowed; }
+
+.btn-outline {
+  background: none;
+  border: 1px solid #c0352b;
+  color: #c0352b;
+  padding: 7px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.btn-outline:hover { background: #fdecea; }
+
+.btn-csv {
+  background: none;
+  border: 1px solid #2d7a2d;
+  color: #2d7a2d;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-csv:hover { background: #eaf3ea; }
+
+/* ── Status / error strip ───────────────────────────────────────────────── */
+.status {
+  font-size: 0.9rem;
+  display: none;
+  align-items: center;
+  gap: 10px;
+}
+.status.loading { display: flex; color: #2d7a2d; }
+.status.error   { display: flex; color: #c0392b; }
+
+.spinner {
+  width: 18px; height: 18px;
+  border: 2.5px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Sections ───────────────────────────────────────────────────────────── */
+.section { display: none; }
+.section.active { display: block; }
+
+/* ── Results ────────────────────────────────────────────────────────────── */
+#results { display: none; }
+#results.visible { display: block; }
+
+.divider { border: none; border-top: 1px solid #dde8dd; margin: 20px 0; }
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.summary-card {
+  background: white;
+  border-radius: 10px;
+  padding: 18px 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  text-align: center;
+}
+.s-label { font-size: 0.82rem; color: #888; margin-bottom: 6px; }
+.s-value { font-size: 1.9rem; font-weight: 700; line-height: 1; }
+.s-unit  { font-size: 0.82rem; color: #aaa; margin-top: 4px; }
+.green-card .s-value { color: #2d7a2d; }
+.blue-card  .s-value { color: #1a5fa8; }
+.gray-card  .s-value { color: #555; }
+
+.results-bar {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 10px;
+}
+.results-bar h2 { font-size: 1rem; color: #333; }
+
+.table-wrap {
+  background: white; border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow-x: auto;
+}
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+thead th {
+  background: #f5faf5; padding: 11px 16px;
+  text-align: left; font-weight: 600; color: #555;
+  border-bottom: 1px solid #e0ebe0; white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid #f2f5f2; transition: background 0.1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: #f7faf7; }
+td { padding: 9px 16px; color: #333; }
+td.right { text-align: right; font-variant-numeric: tabular-nums; }
+td.green { color: #2d7a2d; font-weight: 500; }
+td.blue  { color: #1a5fa8; font-weight: 500; }
+td.muted { color: #bbb; }
+
+@media (max-width: 580px) {
+  .summary-grid { grid-template-columns: 1fr 1fr; }
+  .gray-card { grid-column: span 2; }
+  .field-row { grid-template-columns: 1fr; gap: 4px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>⚡ GoodWe EV Charging Dashboard</h1>
+
+  <!-- ── Not signed in ──────────────────────────────────────────────────── -->
+  <div id="login-section" class="section">
+    <div class="card">
+      <div class="card-title">Sign In</div>
+      <div class="field-row">
+        <label for="username">Email</label>
+        <input type="email" id="username" placeholder="your@email.com" autocomplete="username">
+      </div>
+      <div class="field-row">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn-primary" id="login-btn">Sign In</button>
+      <div class="status" id="login-status">
+        <div class="spinner"></div>
+        <span id="login-msg"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Signed in ──────────────────────────────────────────────────────── -->
+  <div id="session-section" class="section">
+    <div class="card">
+      <div class="session-banner">
+        <div class="session-info">
+          <div class="session-dot"></div>
+          <span>Signed in as <strong id="session-user"></strong></span>
+        </div>
+        <button class="btn-outline" id="logout-btn">Sign Out</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Report</div>
+      <div class="field-row">
+        <label>Period</label>
+        <div class="period-nav">
+          <select id="month-select">
+            <option value="1">January</option>
+            <option value="2">February</option>
+            <option value="3">March</option>
+            <option value="4">April</option>
+            <option value="5">May</option>
+            <option value="6">June</option>
+            <option value="7">July</option>
+            <option value="8">August</option>
+            <option value="9">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select>
+          <input type="number" id="year-input" min="2000" max="2099">
+        </div>
+      </div>
+      <div class="field-row">
+        <label for="device-sn">Device SN</label>
+        <input type="text" id="device-sn" placeholder="e.g. 5011KHPA254L0116">
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn-primary" id="fetch-btn">Fetch Charging Records</button>
+      <div class="status" id="fetch-status">
+        <div class="spinner"></div>
+        <span id="fetch-msg"></span>
+      </div>
+    </div>
+
+    <div id="results">
+      <hr class="divider">
+      <div class="summary-grid">
+        <div class="summary-card green-card">
+          <div class="s-label">Green Power Charge</div>
+          <div class="s-value" id="s-green">—</div>
+          <div class="s-unit">kWh</div>
+        </div>
+        <div class="summary-card blue-card">
+          <div class="s-label">Import Energy</div>
+          <div class="s-value" id="s-import">—</div>
+          <div class="s-unit">kWh</div>
+        </div>
+        <div class="summary-card gray-card">
+          <div class="s-label">Total Range</div>
+          <div class="s-value" id="s-range">—</div>
+          <div class="s-unit">km</div>
+        </div>
+      </div>
+      <div class="results-bar">
+        <h2 id="results-title">Sessions</h2>
+        <button class="btn-csv" id="csv-btn">Export CSV</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Start</th>
+              <th>End</th>
+              <th>Duration</th>
+              <th>Total (kWh)</th>
+              <th>Green (kWh)</th>
+              <th>Import (kWh)</th>
+              <th>Range (km)</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+const STORAGE_KEY = 'goodwe_prefs';
+const MONTHS = ['January','February','March','April','May','June',
+                'July','August','September','October','November','December'];
+
+// ── Prefs ──────────────────────────────────────────────────────────────────
+function loadPrefs() {
+  return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+}
+function savePrefs(patch) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...loadPrefs(), ...patch }));
+}
+
+// ── Period picker ──────────────────────────────────────────────────────────
+function getPeriod() {
+  return {
+    month: parseInt(document.getElementById('month-select').value),
+    year:  parseInt(document.getElementById('year-input').value),
+  };
+}
+
+document.getElementById('month-select').addEventListener('change', doFetch);
+document.getElementById('year-input').addEventListener('change', doFetch);
+
+// ── State machine ──────────────────────────────────────────────────────────
+// States: 'logged_out' | 'logged_in'
+
+function showLoggedOut() {
+  const prefs = loadPrefs();
+  document.getElementById('username').value  = prefs.username  || '';
+  document.getElementById('password').value  = prefs.password  || '';
+  document.getElementById('login-section').classList.add('active');
+  document.getElementById('session-section').classList.remove('active');
+  document.getElementById('results').classList.remove('visible');
+  clearStatus('login');
+}
+
+function showLoggedIn(username) {
+  document.getElementById('session-user').textContent = username;
+
+  // Restore period and device SN from prefs
+  const prefs = loadPrefs();
+  const now   = new Date();
+  document.getElementById('month-select').value = parseInt(prefs.month) || (now.getMonth() + 1);
+  document.getElementById('year-input').value   = parseInt(prefs.year)  || now.getFullYear();
+  document.getElementById('device-sn').value    = prefs.device_sn || '';
+
+  document.getElementById('login-section').classList.remove('active');
+  document.getElementById('session-section').classList.add('active');
+  clearStatus('fetch');
+  doFetch();
+}
+
+// ── Init: check server session ─────────────────────────────────────────────
+async function init() {
+  try {
+    const data = await apiFetch('GET', '/api/status');
+    if (data.logged_in) showLoggedIn(data.username);
+    else                showLoggedOut();
+  } catch {
+    showLoggedOut();
+  }
+}
+
+// ── Login ──────────────────────────────────────────────────────────────────
+document.getElementById('login-btn').addEventListener('click', async () => {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  if (!username || !password) return showError('login', 'Email and password are required.');
+
+  setLoading('login', true, 'Signing in…');
+  try {
+    const data = await apiFetch('POST', '/api/login', { username, password });
+    if (data.ok) {
+      savePrefs({ username, password });
+      showLoggedIn(data.username);
+    } else {
+      showError('login', data.error || 'Sign in failed.');
+    }
+  } catch (e) {
+    showError('login', 'Request failed: ' + e.message);
+  }
+});
+
+// ── Logout ─────────────────────────────────────────────────────────────────
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  await apiFetch('POST', '/api/logout').catch(() => {});
+  showLoggedOut();
+});
+
+// ── Fetch records ──────────────────────────────────────────────────────────
+let lastRecords = [];
+
+async function doFetch() {
+  const device_sn = document.getElementById('device-sn').value.trim();
+  if (!device_sn) return;
+
+  const { month, year } = getPeriod();
+
+  savePrefs({ month, year, device_sn });
+  setLoading('fetch', true, 'Fetching charging records…');
+  document.getElementById('results').classList.remove('visible');
+
+  try {
+    const data = await apiFetch('POST', '/api/fetch', { year, month, device_sn });
+    if (data.ok) {
+      lastRecords = data.records;
+      renderResults(data, month, year);
+      clearStatus('fetch');
+    } else if (data.session_expired) {
+      showLoggedOut();
+      showError('login', data.error || 'Session expired. Please sign in again.');
+    } else {
+      showError('fetch', data.error || 'Unknown error.');
+    }
+  } catch (e) {
+    showError('fetch', 'Request failed: ' + e.message);
+  }
+}
+
+document.getElementById('fetch-btn').addEventListener('click', () => {
+  const device_sn = document.getElementById('device-sn').value.trim();
+  if (!device_sn) return showError('fetch', 'Device SN is required.');
+  doFetch();
+});
+
+// ── Results ────────────────────────────────────────────────────────────────
+function fmtDuration(min) {
+  if (!min) return '—';
+  const h = Math.floor(min / 60), m = min % 60;
+  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
+
+function renderResults(data, month, year) {
+  const totalRange = data.records.reduce((sum, r) => sum + r.range_km, 0);
+  document.getElementById('s-green').textContent    = data.total_green_kwh.toFixed(2);
+  document.getElementById('s-import').textContent   = data.total_import_kwh.toFixed(2);
+  document.getElementById('s-range').textContent    = totalRange > 0 ? totalRange.toFixed(1) : '—';
+  document.getElementById('results-title').textContent =
+    `Sessions — ${MONTHS[month - 1]} ${year}`;
+
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = data.records.map(r => {
+    const gc  = r.green_kwh  > 0 ? 'green' : 'muted';
+    const ic  = r.import_kwh > 0 ? 'blue'  : 'muted';
+    const rng = r.range_km   > 0 ? '' : 'muted';
+    return `<tr>
+      <td>${r.session}</td>
+      <td>${r.start}</td>
+      <td>${r.end}</td>
+      <td class="right">${fmtDuration(r.duration_min)}</td>
+      <td class="right">${r.total_kwh.toFixed(2)}</td>
+      <td class="right ${gc}">${r.green_kwh.toFixed(2)}</td>
+      <td class="right ${ic}">${r.import_kwh.toFixed(2)}</td>
+      <td class="right ${rng}">${r.range_km > 0 ? r.range_km.toFixed(1) : '—'}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('results').classList.add('visible');
+}
+
+// ── CSV export ─────────────────────────────────────────────────────────────
+document.getElementById('csv-btn').addEventListener('click', () => {
+  if (!lastRecords.length) return;
+  const { month, year } = getPeriod();
+  const rows  = [
+    'Session,Start,End,Duration (min),Total (kWh),Green (kWh),Import (kWh),Range (km)',
+    ...lastRecords.map(r =>
+      `${r.session},"${r.start}","${r.end}",${r.duration_min},` +
+      `${r.total_kwh.toFixed(2)},${r.green_kwh.toFixed(2)},${r.import_kwh.toFixed(2)},${r.range_km.toFixed(1)}`),
+  ];
+  const a = Object.assign(document.createElement('a'), {
+    href:     URL.createObjectURL(new Blob([rows.join('\n')], { type: 'text/csv' })),
+    download: `goodwe_${year}_${String(month).padStart(2,'0')}.csv`,
+  });
+  a.click();
+});
+
+// ── UI helpers ─────────────────────────────────────────────────────────────
+function setLoading(ctx, on, msg) {
+  const statusEl = document.getElementById(`${ctx}-status`);
+  const btnId    = ctx === 'login' ? 'login-btn' : 'fetch-btn';
+  document.getElementById(btnId).disabled = on;
+  if (on) {
+    statusEl.className = 'status loading';
+    document.getElementById(`${ctx}-msg`).textContent = msg;
+  } else {
+    statusEl.className = 'status';
+  }
+}
+
+function clearStatus(ctx) { setLoading(ctx, false); }
+
+function showError(ctx, msg) {
+  const statusEl = document.getElementById(`${ctx}-status`);
+  const btnId    = ctx === 'login' ? 'login-btn' : 'fetch-btn';
+  document.getElementById(btnId).disabled = false;
+  statusEl.className = 'status error';
+  statusEl.innerHTML = `<span>⚠ ${msg}</span>`;
+}
+
+async function apiFetch(method, url, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const resp = await fetch(url, opts);
+  return resp.json();
+}
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
