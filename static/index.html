@@ -17,7 +17,27 @@ body {
 
 .container { max-width: 900px; margin: 0 auto; }
 
-h1 { font-size: 1.7rem; color: #1a4d1a; margin-bottom: 20px; }
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+h1 { font-size: 1.7rem; color: #1a4d1a; }
+
+.lang-select {
+  width: auto;
+  padding: 5px 8px;
+  border: 1px solid #d0d8d0;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #444;
+  background: white;
+  cursor: pointer;
+  flex-shrink: 0;
+}
 
 .card {
   background: white;
@@ -47,7 +67,7 @@ h1 { font-size: 1.7rem; color: #1a4d1a; margin-bottom: 20px; }
 
 label { font-size: 0.9rem; color: #444; font-weight: 500; }
 
-input, select {
+input, select:not(.lang-select) {
   width: 100%;
   padding: 8px 10px;
   border: 1px solid #d0d8d0;
@@ -228,23 +248,31 @@ td.muted { color: #bbb; }
 <body>
 <div class="container">
 
-  <h1>⚡ GoodWe EV Charging Dashboard</h1>
+  <div class="top-bar">
+    <h1 data-i18n="appTitle">⚡ GoodWe EV Charging Dashboard</h1>
+    <select id="lang-select" class="lang-select">
+      <option value="en">EN</option>
+      <option value="sk">SK</option>
+    </select>
+  </div>
 
   <!-- ── Not signed in ──────────────────────────────────────────────────── -->
   <div id="login-section" class="section">
     <div class="card">
-      <div class="card-title">Sign In</div>
+      <div class="card-title" data-i18n="signIn">Sign In</div>
       <div class="field-row">
-        <label for="username">Email</label>
-        <input type="email" id="username" placeholder="your@email.com" autocomplete="username">
+        <label for="username" data-i18n="email">Email</label>
+        <input type="email" id="username" placeholder="your@email.com"
+               data-i18n-ph="emailPlaceholder" autocomplete="username">
       </div>
       <div class="field-row">
-        <label for="password">Password</label>
-        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+        <label for="password" data-i18n="password">Password</label>
+        <input type="password" id="password" placeholder="••••••••"
+               data-i18n-ph="passwordPlaceholder" autocomplete="current-password">
       </div>
     </div>
     <div class="actions">
-      <button class="btn-primary" id="login-btn">Sign In</button>
+      <button class="btn-primary" id="login-btn" data-i18n="signIn">Sign In</button>
       <div class="status" id="login-status">
         <div class="spinner"></div>
         <span id="login-msg"></span>
@@ -258,16 +286,19 @@ td.muted { color: #bbb; }
       <div class="session-banner">
         <div class="session-info">
           <div class="session-dot"></div>
-          <span>Signed in as <strong id="session-user"></strong></span>
+          <span>
+            <span data-i18n="signedInAs">Signed in as</span>
+            <strong id="session-user"></strong>
+          </span>
         </div>
-        <button class="btn-outline" id="logout-btn">Sign Out</button>
+        <button class="btn-outline" id="logout-btn" data-i18n="signOut">Sign Out</button>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title">Report</div>
+      <div class="card-title" data-i18n="report">Report</div>
       <div class="field-row">
-        <label>Period</label>
+        <label data-i18n="period">Period</label>
         <div class="period-nav">
           <select id="month-select">
             <option value="1">January</option>
@@ -287,13 +318,14 @@ td.muted { color: #bbb; }
         </div>
       </div>
       <div class="field-row">
-        <label for="device-sn">Device SN</label>
-        <input type="text" id="device-sn" placeholder="e.g. 5011KHPA254L0116">
+        <label for="device-sn" data-i18n="deviceSn">Device SN</label>
+        <input type="text" id="device-sn" placeholder="e.g. 5011KHPA254L0116"
+               data-i18n-ph="deviceSnPlaceholder">
       </div>
     </div>
 
     <div class="actions">
-      <button class="btn-primary" id="fetch-btn">Fetch Charging Records</button>
+      <button class="btn-primary" id="fetch-btn" data-i18n="fetchRecords">Fetch Charging Records</button>
       <div class="status" id="fetch-status">
         <div class="spinner"></div>
         <span id="fetch-msg"></span>
@@ -304,37 +336,37 @@ td.muted { color: #bbb; }
       <hr class="divider">
       <div class="summary-grid">
         <div class="summary-card green-card">
-          <div class="s-label">Green Power Charge</div>
+          <div class="s-label" data-i18n="greenPower">Green Power Charge</div>
           <div class="s-value" id="s-green">—</div>
           <div class="s-unit">kWh</div>
         </div>
         <div class="summary-card blue-card">
-          <div class="s-label">Import Energy</div>
+          <div class="s-label" data-i18n="importEnergy">Import Energy</div>
           <div class="s-value" id="s-import">—</div>
           <div class="s-unit">kWh</div>
         </div>
         <div class="summary-card gray-card">
-          <div class="s-label">Total Range</div>
+          <div class="s-label" data-i18n="totalRange">Total Range</div>
           <div class="s-value" id="s-range">—</div>
           <div class="s-unit">km</div>
         </div>
       </div>
       <div class="results-bar">
-        <h2 id="results-title">Sessions</h2>
-        <button class="btn-csv" id="csv-btn">Export CSV</button>
+        <h2 id="results-title"></h2>
+        <button class="btn-csv" id="csv-btn" data-i18n="exportCsv">Export CSV</button>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th>#</th>
-              <th>Start</th>
-              <th>End</th>
-              <th>Duration</th>
-              <th>Total (kWh)</th>
-              <th>Green (kWh)</th>
-              <th>Import (kWh)</th>
-              <th>Range (km)</th>
+              <th data-i18n="colStart">Start</th>
+              <th data-i18n="colEnd">End</th>
+              <th data-i18n="colDuration">Duration</th>
+              <th data-i18n="colTotal">Total (kWh)</th>
+              <th data-i18n="colGreen">Green (kWh)</th>
+              <th data-i18n="colImport">Import (kWh)</th>
+              <th data-i18n="colRange">Range (km)</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
@@ -346,8 +378,117 @@ td.muted { color: #bbb; }
 </div>
 <script>
 const STORAGE_KEY = 'goodwe_prefs';
-const MONTHS = ['January','February','March','April','May','June',
-                'July','August','September','October','November','December'];
+
+// ── Translations ────────────────────────────────────────────────────────────
+const TRANSLATIONS = {
+  en: {
+    appTitle:            '⚡ GoodWe EV Charging Dashboard',
+    signIn:              'Sign In',
+    email:               'Email',
+    password:            'Password',
+    emailPlaceholder:    'your@email.com',
+    passwordPlaceholder: '••••••••',
+    signingIn:           'Signing in…',
+    emailPasswordRequired: 'Email and password are required.',
+    signInFailed:        'Sign in failed.',
+    requestFailed:       'Request failed: ',
+    signedInAs:          'Signed in as',
+    signOut:             'Sign Out',
+    report:              'Report',
+    period:              'Period',
+    deviceSn:            'Device SN',
+    deviceSnPlaceholder: 'e.g. 5011KHPA254L0116',
+    fetchRecords:        'Fetch Charging Records',
+    fetching:            'Fetching charging records…',
+    deviceSnRequired:    'Device SN is required.',
+    unknownError:        'Unknown error.',
+    sessionExpired:      'Session expired. Please sign in again.',
+    greenPower:          'Green Power Charge',
+    importEnergy:        'Import Energy',
+    totalRange:          'Total Range',
+    sessions:            'Sessions',
+    exportCsv:           'Export CSV',
+    colStart:            'Start',
+    colEnd:              'End',
+    colDuration:         'Duration',
+    colTotal:            'Total (kWh)',
+    colGreen:            'Green (kWh)',
+    colImport:           'Import (kWh)',
+    colRange:            'Range (km)',
+    months: ['January','February','March','April','May','June',
+             'July','August','September','October','November','December'],
+  },
+  sk: {
+    appTitle:            '⚡ GoodWe EV Nabíjací Prehľad',
+    signIn:              'Prihlásiť sa',
+    email:               'E-mail',
+    password:            'Heslo',
+    emailPlaceholder:    'vas@email.com',
+    passwordPlaceholder: '••••••••',
+    signingIn:           'Prihlasovanie…',
+    emailPasswordRequired: 'E-mail a heslo sú povinné.',
+    signInFailed:        'Prihlásenie zlyhalo.',
+    requestFailed:       'Požiadavka zlyhala: ',
+    signedInAs:          'Prihlásený ako',
+    signOut:             'Odhlásiť sa',
+    report:              'Prehľad',
+    period:              'Obdobie',
+    deviceSn:            'Sériové číslo',
+    deviceSnPlaceholder: 'napr. 5011KHPA254L0116',
+    fetchRecords:        'Načítať záznamy nabíjania',
+    fetching:            'Načítavanie záznamov…',
+    deviceSnRequired:    'Sériové číslo je povinné.',
+    unknownError:        'Neznáma chyba.',
+    sessionExpired:      'Relácia vypršala. Prihláste sa znova.',
+    greenPower:          'Zelená energia',
+    importEnergy:        'Sieťová energia',
+    totalRange:          'Celkový dojazd',
+    sessions:            'Relácie',
+    exportCsv:           'Exportovať CSV',
+    colStart:            'Začiatok',
+    colEnd:              'Koniec',
+    colDuration:         'Trvanie',
+    colTotal:            'Spolu (kWh)',
+    colGreen:            'Zelená (kWh)',
+    colImport:           'Import (kWh)',
+    colRange:            'Dojazd (km)',
+    months: ['Január','Február','Marec','Apríl','Máj','Jún',
+             'Júl','August','September','Október','November','December'],
+  },
+};
+
+let currentLang = 'en';
+
+function tr(key) {
+  return (TRANSLATIONS[currentLang] || TRANSLATIONS.en)[key] || key;
+}
+
+function applyLang(lang) {
+  currentLang = lang;
+  savePrefs({ lang });
+  document.getElementById('lang-select').value = lang;
+  document.documentElement.lang = lang;
+
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = TRANSLATIONS[lang][el.dataset.i18n] || el.textContent;
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    el.placeholder = TRANSLATIONS[lang][el.dataset.i18nPh] || el.placeholder;
+  });
+
+  // Update month dropdown options
+  const months = tr('months');
+  document.querySelectorAll('#month-select option').forEach((opt, i) => {
+    opt.textContent = months[i];
+  });
+
+  // Refresh results title if results are currently shown
+  if (document.getElementById('results').classList.contains('visible')) {
+    const { month, year } = getPeriod();
+    document.getElementById('results-title').textContent =
+      `${tr('sessions')} — ${months[month - 1]} ${year}`;
+  }
+}
 
 // ── Prefs ──────────────────────────────────────────────────────────────────
 function loadPrefs() {
@@ -368,13 +509,16 @@ function getPeriod() {
 document.getElementById('month-select').addEventListener('change', doFetch);
 document.getElementById('year-input').addEventListener('change', doFetch);
 
-// ── State machine ──────────────────────────────────────────────────────────
-// States: 'logged_out' | 'logged_in'
+// ── Language switcher ──────────────────────────────────────────────────────
+document.getElementById('lang-select').addEventListener('change', e => {
+  applyLang(e.target.value);
+});
 
+// ── State machine ──────────────────────────────────────────────────────────
 function showLoggedOut() {
   const prefs = loadPrefs();
-  document.getElementById('username').value  = prefs.username  || '';
-  document.getElementById('password').value  = prefs.password  || '';
+  document.getElementById('username').value = prefs.username || '';
+  document.getElementById('password').value = prefs.password || '';
   document.getElementById('login-section').classList.add('active');
   document.getElementById('session-section').classList.remove('active');
   document.getElementById('results').classList.remove('visible');
@@ -384,7 +528,6 @@ function showLoggedOut() {
 function showLoggedIn(username) {
   document.getElementById('session-user').textContent = username;
 
-  // Restore period and device SN from prefs
   const prefs = loadPrefs();
   const now   = new Date();
   document.getElementById('month-select').value = parseInt(prefs.month) || (now.getMonth() + 1);
@@ -399,6 +542,9 @@ function showLoggedIn(username) {
 
 // ── Init: check server session ─────────────────────────────────────────────
 async function init() {
+  const prefs = loadPrefs();
+  applyLang(prefs.lang || 'sk');
+
   try {
     const data = await apiFetch('GET', '/api/status');
     if (data.logged_in) showLoggedIn(data.username);
@@ -412,19 +558,19 @@ async function init() {
 document.getElementById('login-btn').addEventListener('click', async () => {
   const username = document.getElementById('username').value.trim();
   const password = document.getElementById('password').value;
-  if (!username || !password) return showError('login', 'Email and password are required.');
+  if (!username || !password) return showError('login', tr('emailPasswordRequired'));
 
-  setLoading('login', true, 'Signing in…');
+  setLoading('login', true, tr('signingIn'));
   try {
     const data = await apiFetch('POST', '/api/login', { username, password });
     if (data.ok) {
       savePrefs({ username, password });
       showLoggedIn(data.username);
     } else {
-      showError('login', data.error || 'Sign in failed.');
+      showError('login', data.error || tr('signInFailed'));
     }
   } catch (e) {
-    showError('login', 'Request failed: ' + e.message);
+    showError('login', tr('requestFailed') + e.message);
   }
 });
 
@@ -444,7 +590,7 @@ async function doFetch() {
   const { month, year } = getPeriod();
 
   savePrefs({ month, year, device_sn });
-  setLoading('fetch', true, 'Fetching charging records…');
+  setLoading('fetch', true, tr('fetching'));
   document.getElementById('results').classList.remove('visible');
 
   try {
@@ -455,18 +601,18 @@ async function doFetch() {
       clearStatus('fetch');
     } else if (data.session_expired) {
       showLoggedOut();
-      showError('login', data.error || 'Session expired. Please sign in again.');
+      showError('login', data.error || tr('sessionExpired'));
     } else {
-      showError('fetch', data.error || 'Unknown error.');
+      showError('fetch', data.error || tr('unknownError'));
     }
   } catch (e) {
-    showError('fetch', 'Request failed: ' + e.message);
+    showError('fetch', tr('requestFailed') + e.message);
   }
 }
 
 document.getElementById('fetch-btn').addEventListener('click', () => {
   const device_sn = document.getElementById('device-sn').value.trim();
-  if (!device_sn) return showError('fetch', 'Device SN is required.');
+  if (!device_sn) return showError('fetch', tr('deviceSnRequired'));
   doFetch();
 });
 
@@ -479,17 +625,17 @@ function fmtDuration(min) {
 
 function renderResults(data, month, year) {
   const totalRange = data.records.reduce((sum, r) => sum + r.range_km, 0);
-  document.getElementById('s-green').textContent    = data.total_green_kwh.toFixed(2);
-  document.getElementById('s-import').textContent   = data.total_import_kwh.toFixed(2);
-  document.getElementById('s-range').textContent    = totalRange > 0 ? totalRange.toFixed(1) : '—';
+  document.getElementById('s-green').textContent  = data.total_green_kwh.toFixed(2);
+  document.getElementById('s-import').textContent = data.total_import_kwh.toFixed(2);
+  document.getElementById('s-range').textContent  = totalRange > 0 ? totalRange.toFixed(1) : '—';
   document.getElementById('results-title').textContent =
-    `Sessions — ${MONTHS[month - 1]} ${year}`;
+    `${tr('sessions')} — ${tr('months')[month - 1]} ${year}`;
 
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = data.records.map(r => {
     const gc  = r.green_kwh  > 0 ? 'green' : 'muted';
     const ic  = r.import_kwh > 0 ? 'blue'  : 'muted';
-    const rng = r.range_km   > 0 ? '' : 'muted';
+    const rng = r.range_km   > 0 ? ''      : 'muted';
     return `<tr>
       <td>${r.session}</td>
       <td>${r.start}</td>
@@ -509,7 +655,7 @@ function renderResults(data, month, year) {
 document.getElementById('csv-btn').addEventListener('click', () => {
   if (!lastRecords.length) return;
   const { month, year } = getPeriod();
-  const rows  = [
+  const rows = [
     'Session,Start,End,Duration (min),Total (kWh),Green (kWh),Import (kWh),Range (km)',
     ...lastRecords.map(r =>
       `${r.session},"${r.start}","${r.end}",${r.duration_min},` +

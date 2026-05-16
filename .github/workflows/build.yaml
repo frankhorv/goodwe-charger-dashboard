@@ -30,6 +30,30 @@ jobs:
       - name: Build
         run: cargo build --release
 
+      # Self-signed certificate — shows publisher name but still triggers SmartScreen.
+      # Secrets: SIGNING_CERT_BASE64 (PFX as base64), SIGNING_CERT_PASSWORD
+      - name: Sign binary
+        shell: pwsh
+        env:
+          PFX_BASE64:   ${{ secrets.SIGNING_CERT_BASE64 }}
+          PFX_PASSWORD: ${{ secrets.SIGNING_CERT_PASSWORD }}
+        run: |
+          $bytes = [Convert]::FromBase64String($env:PFX_BASE64)
+          [IO.File]::WriteAllBytes('cert.pfx', $bytes)
+
+          $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" `
+            -Recurse -Filter signtool.exe |
+            Where-Object { $_.FullName -match 'x64' } |
+            Sort-Object FullName -Descending |
+            Select-Object -First 1 -ExpandProperty FullName
+
+          & $signtool sign `
+            /f cert.pfx /p $env:PFX_PASSWORD `
+            /tr http://timestamp.digicert.com /td sha256 /fd sha256 `
+            target\release\goodwe-web.exe
+
+          Remove-Item cert.pfx
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
